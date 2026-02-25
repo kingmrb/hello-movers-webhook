@@ -38,12 +38,29 @@ app.post('/webhook', async (req, res) => {
     // Try to find data_collection in various places
     let collectedData = {};
     
-    if (data.analysis?.data_collection) {
+    // Log the data object structure
+    if (data.data) {
+      console.log('=== DATA.DATA KEYS ===');
+      console.log(Object.keys(data.data));
+      
+      if (data.data.analysis) {
+        console.log('=== DATA.DATA.ANALYSIS ===');
+        console.log(JSON.stringify(data.data.analysis, null, 2));
+      }
+    }
+    
+    if (data.data?.analysis?.data_collection) {
+      console.log('Found at: data.data.analysis.data_collection');
+      collectedData = data.data.analysis.data_collection;
+    } else if (data.analysis?.data_collection) {
       console.log('Found at: data.analysis.data_collection');
       collectedData = data.analysis.data_collection;
     } else if (data.data_collection) {
       console.log('Found at: data.data_collection');
       collectedData = data.data_collection;
+    } else if (data.data?.data_collection) {
+      console.log('Found at: data.data.data_collection');
+      collectedData = data.data.data_collection;
     } else if (data.analysis?.collected_data) {
       console.log('Found at: data.analysis.collected_data');
       collectedData = data.analysis.collected_data;
