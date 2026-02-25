@@ -13,31 +13,6 @@ const TO_EMAIL = 'murad.r.bappi@gmail.com';
 const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
 
 // ===========================================
-// HELPER FUNCTION
-// ===========================================
-
-function extractDataCollection(data) {
-  // Find the data_collection array in the payload
-  const dataArray = 
-    data.analysis?.data_collection ||
-    data.data_collection ||
-    [];
-  
-  // Convert array format to simple key-value object
-  const result = {};
-  
-  if (Array.isArray(dataArray)) {
-    dataArray.forEach(item => {
-      if (item.data_collection_id && item.value !== undefined) {
-        result[item.data_collection_id] = item.value;
-      }
-    });
-  }
-  
-  return result;
-}
-
-// ===========================================
 // WEBHOOK ENDPOINT
 // ===========================================
 
@@ -45,13 +20,47 @@ app.post('/webhook', async (req, res) => {
   try {
     const data = req.body;
     
-    // Log for debugging
-    console.log('Webhook received');
+    // Log the COMPLETE raw payload
+    console.log('=== COMPLETE RAW PAYLOAD START ===');
+    console.log(JSON.stringify(data, null, 2));
+    console.log('=== COMPLETE RAW PAYLOAD END ===');
     
-    // Extract data using helper function
-    const collectedData = extractDataCollection(data);
+    // Log all top-level keys
+    console.log('=== TOP LEVEL KEYS ===');
+    console.log(Object.keys(data));
     
-    console.log('=== EXTRACTED DATA ===');
+    // Check for analysis object
+    if (data.analysis) {
+      console.log('=== ANALYSIS OBJECT ===');
+      console.log(JSON.stringify(data.analysis, null, 2));
+    }
+    
+    // Try to find data_collection in various places
+    let collectedData = {};
+    
+    if (data.analysis?.data_collection) {
+      console.log('Found at: data.analysis.data_collection');
+      collectedData = data.analysis.data_collection;
+    } else if (data.data_collection) {
+      console.log('Found at: data.data_collection');
+      collectedData = data.data_collection;
+    } else if (data.analysis?.collected_data) {
+      console.log('Found at: data.analysis.collected_data');
+      collectedData = data.analysis.collected_data;
+    } else if (data.collected_data) {
+      console.log('Found at: data.collected_data');
+      collectedData = data.collected_data;
+    } else if (data.call?.analysis?.data_collection) {
+      console.log('Found at: data.call.analysis.data_collection');
+      collectedData = data.call.analysis.data_collection;
+    } else if (data.conversation?.analysis?.data_collection) {
+      console.log('Found at: data.conversation.analysis.data_collection');
+      collectedData = data.conversation.analysis.data_collection;
+    } else {
+      console.log('Data collection NOT FOUND in expected locations');
+    }
+    
+    console.log('=== COLLECTED DATA ===');
     console.log(JSON.stringify(collectedData, null, 2));
     
     // Extract individual fields
@@ -163,8 +172,6 @@ app.post('/webhook', async (req, res) => {
     });
 
     console.log('Email sent successfully!');
-    console.log('Name:', callerName, '| Phone:', phoneNumber, '| Email:', emailAddress);
-    
     res.status(200).json({ success: true, message: 'Email sent' });
 
   } catch (error) {
@@ -178,7 +185,7 @@ app.post('/webhook', async (req, res) => {
 // ===========================================
 
 app.get('/', (req, res) => {
-  res.send('Hello Movers Email Webhook is running! (v3)');
+  res.send('Hello Movers Email Webhook is running! (v3 - debug)');
 });
 
 // ===========================================
