@@ -13,6 +13,31 @@ const TO_EMAIL = 'murad.r.bappi@gmail.com';
 const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
 
 // ===========================================
+// HELPER FUNCTION
+// ===========================================
+
+function extractDataCollection(data) {
+  // Find the data_collection array in the payload
+  const dataArray = 
+    data.analysis?.data_collection ||
+    data.data_collection ||
+    [];
+  
+  // Convert array format to simple key-value object
+  const result = {};
+  
+  if (Array.isArray(dataArray)) {
+    dataArray.forEach(item => {
+      if (item.data_collection_id && item.value !== undefined) {
+        result[item.data_collection_id] = item.value;
+      }
+    });
+  }
+  
+  return result;
+}
+
+// ===========================================
 // WEBHOOK ENDPOINT
 // ===========================================
 
@@ -20,21 +45,13 @@ app.post('/webhook', async (req, res) => {
   try {
     const data = req.body;
     
-    // Log the full payload for debugging
-    console.log('=== FULL WEBHOOK PAYLOAD ===');
-    console.log(JSON.stringify(data, null, 2));
-    console.log('=== END PAYLOAD ===');
+    // Log for debugging
+    console.log('Webhook received');
     
-    // Try multiple possible locations for the data
-    const collectedData = 
-      data.analysis?.data_collection || 
-      data.data_collection ||
-      data.analysis?.collected_data ||
-      data.collected_data ||
-      data.data ||
-      {};
+    // Extract data using helper function
+    const collectedData = extractDataCollection(data);
     
-    console.log('=== COLLECTED DATA ===');
+    console.log('=== EXTRACTED DATA ===');
     console.log(JSON.stringify(collectedData, null, 2));
     
     // Extract individual fields
@@ -146,6 +163,8 @@ app.post('/webhook', async (req, res) => {
     });
 
     console.log('Email sent successfully!');
+    console.log('Name:', callerName, '| Phone:', phoneNumber, '| Email:', emailAddress);
+    
     res.status(200).json({ success: true, message: 'Email sent' });
 
   } catch (error) {
@@ -159,7 +178,7 @@ app.post('/webhook', async (req, res) => {
 // ===========================================
 
 app.get('/', (req, res) => {
-  res.send('Hello Movers Email Webhook is running! (v2)');
+  res.send('Hello Movers Email Webhook is running! (v3)');
 });
 
 // ===========================================
