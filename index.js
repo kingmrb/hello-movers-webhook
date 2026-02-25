@@ -5,15 +5,12 @@ const app = express();
 app.use(express.json());
 
 // ===========================================
-// CONFIGURATION
+// CONFIGURATION (from environment variables)
 // ===========================================
 
-// Resend API Key
-const RESEND_API_KEY = 're_ifzVr79G_BeThjdxSm8wFRxMEkRGy4qT8';
-
-// Email settings
-const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const TO_EMAIL = 'murad.r.bappi@gmail.com';
+const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
 
 // ===========================================
 // WEBHOOK ENDPOINT
@@ -21,11 +18,24 @@ const TO_EMAIL = 'murad.r.bappi@gmail.com';
 
 app.post('/webhook', async (req, res) => {
   try {
-    // Extract the data from the webhook payload
     const data = req.body;
     
-    // Get the collected data points
-    const collectedData = data.analysis?.data_collection || {};
+    // Log the full payload for debugging
+    console.log('=== FULL WEBHOOK PAYLOAD ===');
+    console.log(JSON.stringify(data, null, 2));
+    console.log('=== END PAYLOAD ===');
+    
+    // Try multiple possible locations for the data
+    const collectedData = 
+      data.analysis?.data_collection || 
+      data.data_collection ||
+      data.analysis?.collected_data ||
+      data.collected_data ||
+      data.data ||
+      {};
+    
+    console.log('=== COLLECTED DATA ===');
+    console.log(JSON.stringify(collectedData, null, 2));
     
     // Extract individual fields
     const callerName = collectedData.caller_name || 'Not provided';
@@ -136,9 +146,6 @@ app.post('/webhook', async (req, res) => {
     });
 
     console.log('Email sent successfully!');
-    console.log('Data:', collectedData);
-
-    // Respond to ElevenLabs
     res.status(200).json({ success: true, message: 'Email sent' });
 
   } catch (error) {
@@ -152,7 +159,7 @@ app.post('/webhook', async (req, res) => {
 // ===========================================
 
 app.get('/', (req, res) => {
-  res.send('Hello Movers Email Webhook is running!');
+  res.send('Hello Movers Email Webhook is running! (v2)');
 });
 
 // ===========================================
