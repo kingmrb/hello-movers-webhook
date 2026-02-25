@@ -18,78 +18,28 @@ const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
 
 app.post('/webhook', async (req, res) => {
   try {
-    const data = req.body;
+    const payload = req.body;
     
-    // Log the COMPLETE raw payload
-    console.log('=== COMPLETE RAW PAYLOAD START ===');
-    console.log(JSON.stringify(data, null, 2));
-    console.log('=== COMPLETE RAW PAYLOAD END ===');
+    console.log('Webhook received!');
     
-    // Log all top-level keys
-    console.log('=== TOP LEVEL KEYS ===');
-    console.log(Object.keys(data));
+    // The data is at: payload.data.analysis.data_collection_results
+    const dataCollectionResults = payload?.data?.analysis?.data_collection_results || {};
     
-    // Check for analysis object
-    if (data.analysis) {
-      console.log('=== ANALYSIS OBJECT ===');
-      console.log(JSON.stringify(data.analysis, null, 2));
-    }
+    console.log('=== DATA COLLECTION RESULTS ===');
+    console.log(JSON.stringify(dataCollectionResults, null, 2));
     
-    // Try to find data_collection in various places
-    let collectedData = {};
-    
-    // Log the data object structure
-    if (data.data) {
-      console.log('=== DATA.DATA KEYS ===');
-      console.log(Object.keys(data.data));
-      
-      if (data.data.analysis) {
-        console.log('=== DATA.DATA.ANALYSIS ===');
-        console.log(JSON.stringify(data.data.analysis, null, 2));
-      }
-    }
-    
-    if (data.data?.analysis?.data_collection) {
-      console.log('Found at: data.data.analysis.data_collection');
-      collectedData = data.data.analysis.data_collection;
-    } else if (data.analysis?.data_collection) {
-      console.log('Found at: data.analysis.data_collection');
-      collectedData = data.analysis.data_collection;
-    } else if (data.data_collection) {
-      console.log('Found at: data.data_collection');
-      collectedData = data.data_collection;
-    } else if (data.data?.data_collection) {
-      console.log('Found at: data.data.data_collection');
-      collectedData = data.data.data_collection;
-    } else if (data.analysis?.collected_data) {
-      console.log('Found at: data.analysis.collected_data');
-      collectedData = data.analysis.collected_data;
-    } else if (data.collected_data) {
-      console.log('Found at: data.collected_data');
-      collectedData = data.collected_data;
-    } else if (data.call?.analysis?.data_collection) {
-      console.log('Found at: data.call.analysis.data_collection');
-      collectedData = data.call.analysis.data_collection;
-    } else if (data.conversation?.analysis?.data_collection) {
-      console.log('Found at: data.conversation.analysis.data_collection');
-      collectedData = data.conversation.analysis.data_collection;
-    } else {
-      console.log('Data collection NOT FOUND in expected locations');
-    }
-    
-    console.log('=== COLLECTED DATA ===');
-    console.log(JSON.stringify(collectedData, null, 2));
-    
-    // Extract individual fields
-    const callerName = collectedData.caller_name || 'Not provided';
-    const phoneNumber = collectedData.phone_number || 'Not provided';
-    const emailAddress = collectedData.email_address || 'Not provided';
-    const reasonForCalling = collectedData.reason_for_calling || 'Not provided';
-    const propertyType = collectedData.property_type || 'N/A';
-    const bedrooms = collectedData.number_of_bedrooms || 'N/A';
-    const pickupZip = collectedData.pickup_zip_code || 'N/A';
-    const deliveryZip = collectedData.delivery_zip_code || 'N/A';
-    const moveDate = collectedData.move_date || 'N/A';
+    // Extract values - each field has a "value" property
+    const callerName = dataCollectionResults.caller_name?.value || 'Not provided';
+    const phoneNumber = dataCollectionResults.phone_number?.value || 'Not provided';
+    const emailAddress = dataCollectionResults.email_address?.value || 'Not provided';
+    const reasonForCalling = dataCollectionResults.reason_for_calling?.value || 'Not provided';
+    const propertyType = dataCollectionResults.property_type?.value || 'N/A';
+    const bedrooms = dataCollectionResults.number_of_bedrooms?.value || 'N/A';
+    const pickupZip = dataCollectionResults.pickup_zip_code?.value || 'N/A';
+    const deliveryZip = dataCollectionResults.delivery_zip_code?.value || 'N/A';
+    const moveDate = dataCollectionResults.move_date?.value || 'N/A';
+
+    console.log(`Name: ${callerName} | Phone: ${phoneNumber} | Email: ${emailAddress}`);
 
     // Get call time
     const callTime = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
@@ -202,7 +152,7 @@ app.post('/webhook', async (req, res) => {
 // ===========================================
 
 app.get('/', (req, res) => {
-  res.send('Hello Movers Email Webhook is running! (v3 - debug)');
+  res.send('Hello Movers Email Webhook is running! (v4 - fixed)');
 });
 
 // ===========================================
