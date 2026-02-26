@@ -9,7 +9,7 @@ app.use(express.json());
 // ===========================================
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const TO_EMAIL = 'Xavier@hellomoversllc.com';
+const TO_EMAIL = 'xavier@hellomoversllc.com';
 const FROM_EMAIL = 'Hello Movers <onboarding@resend.dev>';
 
 // ===========================================
